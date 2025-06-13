@@ -1,43 +1,48 @@
-import React, { useState, useEffect } from "react";
-import { v4 as uuid } from "uuid";
-import "./App.css";
-import Header from "./Header";
+import React, { useState,useEffect } from "react";
+import { v4 as uuidv4 } from "uuid";
 import AddContact from "./AddContact";
 import ContactList from "./ContactList";
 
 function App() {
-  const LOCAL_STORAGE_KEY = "contacts";
-  const [contacts, setContacts] = useState(
-    JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) ?? []
-  );
+  const [contacts, setContacts] = useState([]);
+  const [editContact, setEditContact] = useState(null);
 
   const addContactHandler = (contact) => {
-    console.log(contact);
-    setContacts([...contacts, { id: uuid(), ...contact }]);
+    if (editContact) {
+      setContacts(
+        contacts.map((c) => (c.id === editContact.id ? { ...contact, id: editContact.id } : c))
+      );
+      setEditContact(null);
+    } else {
+      setContacts([...contacts, { id: uuidv4(), ...contact }]);
+    }
+    localStorage.setItem('contacts', JSON.stringify(contacts));
   };
-
-  const removeContactHandler = (id) => {
-    const newContactList = contacts.filter((contact) => {
-      return contact.id !== id;
-    });
-
-    setContacts(newContactList);
-  };
-
-  // useEffect(() => {
-  //   const retriveContacts = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
-  //   if (retriveContacts) setContacts(retriveContacts);
-  // }, []);
 
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(contacts));
+    localStorage.setItem('contacts', JSON.stringify(contacts));
   }, [contacts]);
+
+  const removeContactHandler = (id) => {
+    const newContactList = contacts.filter((contact) => contact.id !== id);
+    setContacts(newContactList);
+    localStorage.setItem('contacts', JSON.stringify(newContactList));
+  };
+
+  const handleFilterChange = (filteredContacts) => {
+    // You can use the filteredContacts here if you need to
+  };
 
   return (
     <div className="ui container">
-      <Header />
-      <AddContact addContactHandler={addContactHandler} />
-      <ContactList contacts={contacts} getContactId={removeContactHandler} />
+      <h2>Contact Manager</h2>
+      <AddContact addContactHandler={addContactHandler} editContact={editContact} contacts={contacts} />
+      <ContactList
+        contacts={contacts}
+        getContactId={removeContactHandler}
+        setEditContact={setEditContact}
+        onFilterChange={handleFilterChange}
+      />
     </div>
   );
 }
